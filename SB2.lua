@@ -1370,7 +1370,7 @@ Killaura:AddSlider('KillauraRange', { Text = 'Range (0 = auto)', Default = 0, Mi
 Killaura:AddToggle('AttackPlayers', { Text = 'Attack players' })
 Killaura:AddDropdown('IgnorePlayers', { Text = 'Ignore players', Values = {}, Multi = true, SpecialType = 'Player' })
 
-Killaura:AddDropdown('SkillToUse', { Text = 'Skill to use', Default = 1, Values = {}, Multi = true, AllowNull = true })
+Killaura:AddDropdown('SkillToUse', { Text = 'Skill to use', Default = 1, Values = {}, AllowNull = true })
 :OnChanged(function(value)
     if not value then
         KillauraSkill.Class = nil
