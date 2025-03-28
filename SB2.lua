@@ -4,9 +4,8 @@ end
 
 if game.GameId ~= 212154879 then return end -- Swordburst 2
 
-task.wait(3)
-if getgenv().AkoraHubSB2 then return end
-getgenv().AkoraHubSB2 = true
+if getgenv().Bluu then return end
+getgenv().Bluu = true
 
 -- local queue_on_teleport = (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or queue_on_teleport
 -- if queue_on_teleport then
@@ -23,12 +22,12 @@ local sendWebhook = (function()
         if not string.match(url, '^https://discord') then return end
 
         body.content = ping and '@everyone' or nil
-        body.username = 'Akora Hub'
+        body.username = 'Bluu'
         body.avatar_url = 'https://raw.githubusercontent.com/Neuublue/Bluu/main/Bluu.png'
         body.embeds = body.embeds or {{}}
         body.embeds[1].timestamp = DateTime:now():ToIsoDate()
         body.embeds[1].footer = {
-            text = 'Akora Hub',
+            text = 'Bluu',
             icon_url = 'https://raw.githubusercontent.com/Neuublue/Bluu/main/Bluu.png'
         }
 
@@ -146,7 +145,7 @@ end)()
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/Library.lua'))()
 
 local Window = Library:CreateWindow({
-    Title = 'Akora Hub 😳 Swordburst 2',
+    Title = 'Bluu 😳 Swordburst 2',
     Center = true,
     AutoShow = true,
     Resizable = true,
@@ -1425,30 +1424,29 @@ else
     end)
 end
 
---if GetLevel() >= 200 and Profile.Skills:FindFirstChild('Meteor Shot') then
---    table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
---    Options.SkillToUse:SetValues()
---else
---    local SkillConnection
---    SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
---        if GetLevel() < 200 then return end
---        if skill.Name ~= 'Meteor Shot' then return end
---        table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
---        Options.SkillToUse:SetValues()
---        SkillConnection:Disconnect()
---    end)
---end
-
+-- if GetLevel() >= 200 and Profile.Skills:FindFirstChild('Meteor Shot') then
+--     table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
+--     Options.SkillToUse:SetValues()
+-- else
+--     local SkillConnection
+--     SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
+--         if GetLevel() < 200 then return end
+--         if skill.Name ~= 'Meteor Shot' then return end
+--         table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
+--         Options.SkillToUse:SetValues()
+--         SkillConnection:Disconnect()
+--     end)
+-- end
 
 if getLevel() >= 60 and Profile.Skills:FindFirstChild('Mending Spirit') then
-    table.insert(Options.SkillToUse.Values, 'Mending Spirit (4% per 0.3s) (50% Stamina Req)')
+    table.insert(Options.SkillToUse.Values, 'Mending Spirit (4%/0.3s) (50% Stamina Req)')
     Options.SkillToUse:SetValues()
 else
     local SkillConnection
     SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
         if getLevel() < 60 then return end
         if skill.Name ~= 'Mending Spirit' then return end
-        table.insert(Options.SkillToUse.Values, 'Mending Spirit (4% per 0.3s) (50% Stamina Req)')
+        table.insert(Options.SkillToUse.Values, 'Mending Spirit (4%/0.3s) (50% Stamina Req)')
         Options.SkillToUse:SetValues()
         SkillConnection:Disconnect()
     end)
@@ -2705,18 +2703,18 @@ Library.ToggleKeybind = Options.MenuKeybind
 
 local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/addons/ThemeManager.lua'))()
 ThemeManager:SetLibrary(Library)
-ThemeManager:SetFolder('Akora Hub/Swordburst 2')
+ThemeManager:SetFolder('Bluu/Swordburst 2')
 ThemeManager:ApplyToTab(Settings)
 
 local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/addons/SaveManager.lua'))()
 SaveManager:SetLibrary(Library)
-SaveManager:SetFolder('Akora Hub/Swordburst 2')
+SaveManager:SetFolder('Bluu/Swordburst 2')
 SaveManager:IgnoreThemeSettings()
 SaveManager:BuildConfigSection(Settings)
 SaveManager:LoadAutoloadConfig()
 
 local Credits = Settings:AddRightGroupbox('Credits')
 
-Credits:AddLabel('Akora - Script')
+Credits:AddLabel('de_Neuublue - Script')
 Credits:AddLabel('Inori - UI library')
 Credits:AddLabel('wally - UI addons')
