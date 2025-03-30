@@ -4,8 +4,8 @@ end
 
 if game.GameId ~= 212154879 then return end -- Swordburst 2
 
-if getgenv().Bluu then return end
-getgenv().Bluu = true
+if getgenv().AkoraSB2 then return end
+getgenv().AkoraSB2 = true
 
 -- local queue_on_teleport = (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or queue_on_teleport
 -- if queue_on_teleport then
@@ -136,12 +136,17 @@ end)()
 local RequiredServices = (function()
     if not MainModule then return end
     local RequiredServices = require(MainModule).Services
+    local Skills = RequiredServices.Skills
     local UI = MainModule.Services.UI
     RequiredServices.InventoryUI = require(UI.Inventory)
     RequiredServices.StatsUI = require(UI.Stats)
     RequiredServices.TradeUI = require(UI.Trade)
+    RequiredServices.SkillHandlers = Skills.skillHandlers
+
     return RequiredServices
 end)()
+
+local fps = getfpscap and getfpscap() or 60
 
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/Library.lua'))()
 local Pathfinder = loadstring(game:HttpGet('https://raw.githubusercontent.com/VeronicVR/Roblox-Scripts/refs/heads/main/PathfindingLibrary.lua'))()
@@ -1854,6 +1859,106 @@ local getCurrentAnimSetting = function()
     return SwordClass == '1HSword' and 'SingleSword' or SwordClass
 end
 
+local GetItemData = RequiredServices.InventoryUI.GetItemData
+local rates = setmetatable({Burst = .06, Tribute = .05, Legendary = .05}, {
+    __index = function(self, i)
+        self[i] = .04
+        return .04
+    end
+})
+local upgrade_amount = {
+    Burst = 25,
+    Legendary = 20,
+    Tribute = 20,
+    Rare = 15,
+    Uncommon = 10,
+    Common = 10
+}
+local ItemDatas = {}
+for _, v in Items:GetChildren() do
+    spawn(function()
+        local ItemData = GetItemData(v)
+        if ItemData.Type == "Weapon" or ItemData.Type == "Clothing" then
+            local stats = ItemData.stats
+            local base
+            for _, v2 in stats do
+                if v2[1] == "Damage" or v2[1] == "Defense" then
+                    base = v2[2]
+                    ItemData.base = base
+                    break
+                end
+            end
+            
+            local rarity = ItemData.rarity
+            local upgrades = upgrade_amount[rarity]
+            ItemData.potential = math.floor(base + (base * rates[rarity] * upgrades))
+        end
+
+        ItemDatas[v.Name] = ItemData
+    end)
+end
+local skillhandlers = RequiredServices and RequiredServices.SkillHandlers or {}
+local whirlspin = skillhandlers["Whirlwind Spin"]
+
+local function SpeedGlitch()
+    if Toggles.Autoswing.Value then
+        task.spawn(RequiredServices.Actions.StopSwing)
+    end
+
+    local leftval = Equip.Left.Value
+    local rightval = Equip.Right.Value
+
+    local leftwep
+    local rightwep
+    local longswordleft
+    local longswordright
+    for i, v in Inventory:GetChildren() do
+        local ItemData = ItemDatas[v.Name]
+        if ItemData.classname == "Longsword" then
+            if longswordleft then
+                longswordright = v
+            else
+                longswordleft = v
+            end
+        end
+        if v.Value == leftval then
+            leftwep = v
+        elseif v.Value == rightval then
+            rightwep = v
+        end
+    end
+    
+    if longswordleft and longswordright then
+        Function:InvokeServer("Equipment", {"EquipWeapon", longswordright, "Right"})
+        Function:InvokeServer("Equipment", {"EquipWeapon", longswordleft, "Left"})
+        wait(.5)
+    end
+
+    spawn(whirlspin)
+
+    if rightwep then
+        Function:InvokeServer("Equipment", {"EquipWeapon", rightwep, "Right"})
+    end
+
+    if leftwep then
+        Function:InvokeServer("Equipment", {"EquipWeapon", leftwep, "Left"})
+    end
+
+    wait(.6)
+
+    setfpscap(1)
+    wait()
+    setfpscap(fps)
+
+    if Toggles.Autoswing.Value then
+        task.spawn(RequiredServices.Actions.StartSwing)
+    end
+end
+
+Misc1:AddButton({ Text = "Speed Glitch", Func = function() 
+    SpeedGlitch()
+end })
+
 Misc1:AddDropdown('ChangeAnimationPack', {
     Text = 'Change animation pack',
     Values = AnimPackNames,
@@ -1921,12 +2026,12 @@ local chatSize = Chat.Size
 
 Misc1:AddToggle('StretchChat', { Text = 'Stretch chat' }):OnChanged(function(value)
     Chat.Position = value and UDim2.new(0, -8, 1, -9) or chatPosition
-    Chat.Size = value and UDim2.fromOffset(600, Camera.ViewportSize.Y - 177) or chatSize
+    Chat.Size = value and UDim2.fromOffset(600, Camera.ViewportSize.Y - 185) or chatSize
 end)
 
 Camera:GetPropertyChangedSignal('ViewportSize'):Connect(function()
     if not Toggles.StretchChat.Value then return end
-    Chat.Size = UDim2.new(0, 600, 0, Camera.ViewportSize.Y - 177)
+    Chat.Size = UDim2.new(0, 600, 0, Camera.ViewportSize.Y - 185)
 end)
 
 Misc1:AddToggle('InfiniteZoomDistance', { Text = 'Infinite zoom distance' })
@@ -2179,7 +2284,7 @@ Drops:AddDropdown('AutoDismantle', { Text = 'Auto dismantle', Values = Rarities,
 
 Drops:AddInput('DropWebhook', { Text = 'Webhook', Placeholder = 'https://discord.com/api/webhooks/' })
 
-Drops:AddButton({ Text = "Test Webhook", Func = function() end })
+Drops:AddButton({ Text = "Test Webhook", Func = function() sendTestMessage() end })
 
 Drops:AddToggle('PingInMessage', { Text = 'Ping in message' })
 
@@ -2771,18 +2876,18 @@ Library.ToggleKeybind = Options.MenuKeybind
 
 local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/addons/ThemeManager.lua'))()
 ThemeManager:SetLibrary(Library)
-ThemeManager:SetFolder('Bluu/Swordburst 2')
+ThemeManager:SetFolder('Akora Hub/Games/Swordburst 2')
 ThemeManager:ApplyToTab(Settings)
 
 local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/addons/SaveManager.lua'))()
 SaveManager:SetLibrary(Library)
-SaveManager:SetFolder('Bluu/Swordburst 2')
+SaveManager:SetFolder('Akora Hub/Games/Swordburst 2')
 SaveManager:IgnoreThemeSettings()
 SaveManager:BuildConfigSection(Settings)
 SaveManager:LoadAutoloadConfig()
 
 local Credits = Settings:AddRightGroupbox('Credits')
 
-Credits:AddLabel('de_Neuublue - Script')
+Credits:AddLabel('Akora - Script')
 Credits:AddLabel('Inori - UI library')
 Credits:AddLabel('wally - UI addons')
