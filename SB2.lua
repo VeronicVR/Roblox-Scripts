@@ -22,13 +22,13 @@ local sendWebhook = (function()
         if not string.match(url, '^https://discord') then return end
 
         body.content = ping and '@everyone' or nil
-        body.username = 'Bluu'
-        body.avatar_url = 'https://raw.githubusercontent.com/Neuublue/Bluu/main/Bluu.png'
+        body.username = 'Akora Hub'
+        body.avatar_url = 'https://raw.githubusercontent.com/VeronicVR/Roblox-Scripts/refs/heads/main/Logo/Akora%20Hub%20Logo.png'
         body.embeds = body.embeds or {{}}
         body.embeds[1].timestamp = DateTime:now():ToIsoDate()
         body.embeds[1].footer = {
-            text = 'Bluu',
-            icon_url = 'https://raw.githubusercontent.com/Neuublue/Bluu/main/Bluu.png'
+            text = 'Swordburst 2 Log',
+            icon_url = 'https://raw.githubusercontent.com/VeronicVR/Roblox-Scripts/refs/heads/main/Logo/Swordburst%202%20Logo.png'
         }
 
         http_request({
@@ -54,6 +54,7 @@ local sendTestMessage = function(url)
 end
 
 local Players = game:GetService('Players')
+local RunS = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 if not LocalPlayer then
     Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
@@ -143,6 +144,7 @@ local RequiredServices = (function()
 end)()
 
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/LinoriaLib/Library.lua'))()
+local Pathfinder = loadstring(game:HttpGet('https://raw.githubusercontent.com/VeronicVR/Roblox-Scripts/refs/heads/main/PathfindingLibrary.lua'))()
 
 local Window = Library:CreateWindow({
     Title = 'Bluu 😳 Swordburst 2',
@@ -428,6 +430,19 @@ waypointLabel.TextStrokeTransparency = 0
 waypointLabel.Text = 'Waypoint position'
 waypointLabel.TextWrapped = false
 waypointLabel.Parent = waypointBillboard
+
+task.spawn(function()
+    local range = Instance.new("Part")
+    range.Size = Vector3.new(50, 50, 50)
+    range.CanCollide = false
+    range.Transparency = 1
+
+    RunS.RenderStepped:Connect(function()
+        range.CFrame = Character:GetPivot()
+    end)
+
+    range.Parent = workspace
+end)
 
 local controls = { W = 0, S = 0, D = 0, A = 0 }
 
@@ -922,7 +937,8 @@ local Autowalk = Farming:AddTab('Autowalk')
 Autowalk:AddToggle('Autowalk', { Text = 'Enabled' }):OnChanged(function()
     toggleLerp(Toggles.Autowalk)
     linearVelocity.Parent = nil
-    local path, waypoints = game:GetService('PathfindingService'):CreatePath({ AgentRadius = 3, AgentHeight = 6 }), {}
+    local PathfindingService = game:GetService('PathfindingService')
+    local path, waypoints = PathfindingService:CreatePath({ AgentRadius = 3, AgentHeight = 6 }), {}
     local targetRefreshTick, target = 0, false
     while Toggles.Autowalk.Value do
         task.wait()
@@ -992,10 +1008,29 @@ Autowalk:AddToggle('Autowalk', { Text = 'Enabled' }):OnChanged(function()
                 waypoints = { HumanoidRootPart.CFrame, { Position = targetPosition } }
 
                 if Toggles.Pathfind.Value then
-                    path:ComputeAsync(myPosition, targetPosition)
-                    if path.Status == Enum.PathStatus.Success then
+                    local success, err = pcall(function()
+                        path:ComputeAsync(myPosition, targetPosition)
+                    end)
+                    if success and path.Status == Enum.PathStatus.Success then
                         waypoints = path:GetWaypoints()
+                    elseif not success then
+                        warn("Pathfinding failed: " .. tostring(err))
+                        task.wait(0.5)
+                        continue
                     end
+                end
+
+                if Toggles.AutoFaceTarget.Value then
+                    -- Face the target when close
+                    local distToTarget = (HumanoidRootPart.Position - targetHumanoidRootPart.Position).Magnitude
+                    if distToTarget <= Options.AutowalkHorizontalOffset.Value + 5 then
+                        local direction = (targetHumanoidRootPart.Position - HumanoidRootPart.Position)
+                        direction = Vector3.new(direction.X, 0, direction.Z).Unit
+                        local lookCFrame = CFrame.new(HumanoidRootPart.Position, HumanoidRootPart.Position + direction)
+                        HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position) * CFrame.Angles(0, lookCFrame.LookVector:Angle(Vector3.new(0, 0, -1)), 0)
+                    end
+                else
+                    --print(Toggles.AutoFaceTarget.Value)
                 end
             end
 
@@ -1023,6 +1058,7 @@ Autowalk:AddToggle('Autowalk', { Text = 'Enabled' }):OnChanged(function()
 end)
 
 Autowalk:AddToggle('Pathfind', { Text = 'Pathfind', Default = true })
+Autowalk:AddToggle('AutoFaceTarget', { Text = 'Auto Face Target' })
 Autowalk:AddSlider('AutowalkHorizontalOffset', { Text = 'Horizontal offset (max = auto)', Default = 40, Min = 0, Max = 40, Rounding = 1, Suffix = 'm' })
 Autowalk:AddLabel('Remaining settings in Autofarm')
 
@@ -1147,12 +1183,14 @@ local getKillauraThreads = (function()
         ['Sweeping Strike'] = 3,
         ['Leaping Slash'] = 3.3,
         ['Summon Pistol'] = 4.35,
-        ['Meteor Shot'] = 3.1
+        ['Meteor Shot'] = 3.1,
+        ['Swordstorm Chain'] = 1,
     }
 
     local skillBaseDamages = {
         ['Summon Pistol'] = 35000,
-        ['Meteor Shot'] = 55000
+        ['Meteor Shot'] = 55000,
+        ['Swordstorm Chain'] = 30000,
     }
 
     return function(entity)
@@ -1424,19 +1462,48 @@ else
     end)
 end
 
--- if GetLevel() >= 200 and Profile.Skills:FindFirstChild('Meteor Shot') then
---     table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
---     Options.SkillToUse:SetValues()
--- else
---     local SkillConnection
---     SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
---         if GetLevel() < 200 then return end
---         if skill.Name ~= 'Meteor Shot' then return end
---         table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
---         Options.SkillToUse:SetValues()
---         SkillConnection:Disconnect()
---     end)
--- end
+if getLevel() >= 200 and Profile.Skills:FindFirstChild('Meteor Shot') then
+    table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
+    Options.SkillToUse:SetValues()
+else
+    local SkillConnection
+    SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
+        if getLevel() < 200 then return end
+        if skill.Name ~= 'Meteor Shot' then return end
+        table.insert(Options.SkillToUse.Values, 'Meteor Shot (x3.1) (55k base)')
+        Options.SkillToUse:SetValues()
+        SkillConnection:Disconnect()
+    end)
+end
+
+--if getLevel() >= 175 and Profile.Skills:FindFirstChild('Swordstorm Chain') then
+--    table.insert(Options.SkillToUse.Values, 'Swordstorm Chain')
+--    Options.SkillToUse:SetValues()
+--else
+--    local SkillConnection
+--    SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
+--        if getLevel() < 175 then return end
+--        if skill.Name ~= 'Swordstorm Chain' then return end
+--        table.insert(Options.SkillToUse.Values, 'Swordstorm Chain')
+--        Options.SkillToUse:SetValues()
+--        SkillConnection:Disconnect()
+--    end)
+--end
+
+--if getLevel() >= 100 and Profile.Skills:FindFirstChild('Everfrost Strike') then
+--    table.insert(Options.SkillToUse.Values, 'Everfrost Strike')
+--    Options.SkillToUse:SetValues()
+--else
+--    local SkillConnection
+--    SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
+--        if getLevel() < 100 then return end
+--        if skill.Name ~= 'Everfrost Strike' then return end
+--        table.insert(Options.SkillToUse.Values, 'Everfrost Strike')
+--        Options.SkillToUse:SetValues()
+--        SkillConnection:Disconnect()
+--    end)
+--end
+
 
 if getLevel() >= 60 and Profile.Skills:FindFirstChild('Mending Spirit') then
     table.insert(Options.SkillToUse.Values, 'Mending Spirit (4%/0.3s) (50% Stamina Req)')
@@ -2110,8 +2177,9 @@ local Rarities = { 'Common', 'Uncommon', 'Rare', 'Legendary', 'Tribute' }
 
 Drops:AddDropdown('AutoDismantle', { Text = 'Auto dismantle', Values = Rarities, Multi = true, AllowNull = true })
 
-Drops:AddInput('DropWebhook', { Text = 'Drop webhook', Placeholder = 'https://discord.com/api/webhooks/' })
-:OnChanged(sendTestMessage)
+Drops:AddInput('DropWebhook', { Text = 'Webhook', Placeholder = 'https://discord.com/api/webhooks/' })
+
+Drops:AddButton({ Text = "Test Webhook", Func = function() end })
 
 Drops:AddToggle('PingInMessage', { Text = 'Ping in message' })
 
@@ -2430,7 +2498,7 @@ FarmingKicks:AddToggle('SkillKick', { Text = 'Skill kick' })
 
 FarmingKicks:AddInput('KickWebhook', { Text = 'Kick webhook', Finished = true, Placeholder = 'https://discord.com/api/webhooks/' })
 :OnChanged(function()
-    sendTestMessage(Options.KickWebhook.Value)
+    
 end)
 
 game:GetService('GuiService').ErrorMessageChanged:Connect(function(message)
