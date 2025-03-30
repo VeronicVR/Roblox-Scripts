@@ -984,6 +984,7 @@ Autowalk:AddToggle('Autowalk', { Text = 'Enabled' }):OnChanged(function()
 
             if target then
                 local targetHumanoidRootPart = target.HumanoidRootPart
+                local RootPart = target:FindFirstChild('RootPart')
                 local targetPosition = targetHumanoidRootPart.CFrame.Position
                 if targetHumanoidRootPart:FindFirstChild('BodyVelocity') then
                     targetPosition += targetHumanoidRootPart.BodyVelocity.VectorVelocity * LocalPlayer:GetNetworkPing()
@@ -1029,11 +1030,11 @@ Autowalk:AddToggle('Autowalk', { Text = 'Enabled' }):OnChanged(function()
                     -- Face the target when close
                     local distToTarget = (HumanoidRootPart.Position - targetHumanoidRootPart.Position).Magnitude
                     if distToTarget <= Options.AutowalkHorizontalOffset.Value + 5 then
-                        local direction = (targetHumanoidRootPart.Position - HumanoidRootPart.Position)
-                        direction = Vector3.new(direction.X, 0, direction.Z).Unit
-                        local lookCFrame = CFrame.new(HumanoidRootPart.Position, HumanoidRootPart.Position + direction)
-                        HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position) * CFrame.Angles(0, lookCFrame.LookVector:Angle(Vector3.new(0, 0, -1)), 0)
-                    end
+                        -- Face target horizontally only
+                        local fromPos = HumanoidRootPart.Position
+                        local toPos = Vector3.new(targetHumanoidRootPart.Position.X, fromPos.Y, targetHumanoidRootPart.Position.Z)
+                        HumanoidRootPart.CFrame = CFrame.new(fromPos, toPos)
+                    end                
                 else
                     --print(Toggles.AutoFaceTarget.Value)
                 end
@@ -2026,12 +2027,12 @@ local chatSize = Chat.Size
 
 Misc1:AddToggle('StretchChat', { Text = 'Stretch chat' }):OnChanged(function(value)
     Chat.Position = value and UDim2.new(0, -8, 1, -9) or chatPosition
-    Chat.Size = value and UDim2.fromOffset(600, Camera.ViewportSize.Y - 185) or chatSize
+    Chat.Size = value and UDim2.fromOffset(600, Camera.ViewportSize.Y - 231) or chatSize
 end)
 
 Camera:GetPropertyChangedSignal('ViewportSize'):Connect(function()
     if not Toggles.StretchChat.Value then return end
-    Chat.Size = UDim2.new(0, 600, 0, Camera.ViewportSize.Y - 185)
+    Chat.Size = UDim2.new(0, 600, 0, Camera.ViewportSize.Y - 231)
 end)
 
 Misc1:AddToggle('InfiniteZoomDistance', { Text = 'Infinite zoom distance' })
