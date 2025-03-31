@@ -9,7 +9,7 @@ getgenv().AkoraSB2 = true
 
 -- local queue_on_teleport = (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or queue_on_teleport
 -- if queue_on_teleport then
---     queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuublue/Bluu/main/Swordburst2.lua'))()")
+--     queue_on_teleport("loadstring(game:HttpGet(''))()")
 -- end
 
 local sendWebhook = (function()
@@ -152,7 +152,7 @@ local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/Neuub
 local Pathfinder = loadstring(game:HttpGet('https://raw.githubusercontent.com/VeronicVR/Roblox-Scripts/refs/heads/main/PathfindingLibrary.lua'))()
 
 local Window = Library:CreateWindow({
-    Title = 'Bluu 😳 Swordburst 2',
+    Title = 'Akora Hub 🐾 Swordburst 2',
     Center = true,
     AutoShow = true,
     Resizable = true,
@@ -1190,7 +1190,7 @@ local getKillauraThreads = (function()
         ['Leaping Slash'] = 3.3,
         ['Summon Pistol'] = 4.35,
         ['Meteor Shot'] = 3.1,
-        ['Swordstorm Chain'] = 1,
+        ['Swordstorm Chain'] = 0,
     }
 
     local skillBaseDamages = {
@@ -1290,10 +1290,28 @@ local useSkill = function(skill)
             task.wait(1)
         elseif skill.Name == 'Meteor Shot' then
             task.wait(12)
+        elseif skill.Name == 'Swordstorm Chain' then
+            task.wait(20)
         end
         skill.OnCooldown = false
     end)
 end
+
+--[[
+Autowalk:AddButton({ Text = "Test Dash", Func = function() 
+    local spiritDashSkill = {
+        Name = "Spirit Dash",
+        Cost = 10,
+        OnCooldown = false,
+        Active = false,
+        Class = nil,
+        Sword = nil,
+        GetSword = function() return true end
+    }
+    
+    useSkill(spiritDashSkill)    
+end })
+--]]
 
 local dealDamage = (function()
     if RequiredServices then
@@ -1482,19 +1500,19 @@ else
     end)
 end
 
---if getLevel() >= 175 and Profile.Skills:FindFirstChild('Swordstorm Chain') then
---    table.insert(Options.SkillToUse.Values, 'Swordstorm Chain')
---    Options.SkillToUse:SetValues()
---else
---    local SkillConnection
---    SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
---        if getLevel() < 175 then return end
---        if skill.Name ~= 'Swordstorm Chain' then return end
---        table.insert(Options.SkillToUse.Values, 'Swordstorm Chain')
---        Options.SkillToUse:SetValues()
---        SkillConnection:Disconnect()
---    end)
---end
+if getLevel() >= 175 and Profile.Skills:FindFirstChild('Swordstorm Chain') then
+    table.insert(Options.SkillToUse.Values, 'Swordstorm Chain')
+    Options.SkillToUse:SetValues()
+else
+    local SkillConnection
+    SkillConnection = Profile.Skills.ChildAdded:Connect(function(skill)
+        if getLevel() < 175 then return end
+        if skill.Name ~= 'Swordstorm Chain' then return end
+        table.insert(Options.SkillToUse.Values, 'Swordstorm Chain')
+        Options.SkillToUse:SetValues()
+        SkillConnection:Disconnect()
+    end)
+end
 
 --if getLevel() >= 100 and Profile.Skills:FindFirstChild('Everfrost Strike') then
 --    table.insert(Options.SkillToUse.Values, 'Everfrost Strike')
