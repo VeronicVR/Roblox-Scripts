@@ -40,19 +40,6 @@ local sendWebhook = (function()
     end
 end)()
 
-
-local sendTestMessage = function(url)
-    sendWebhook(
-        url, {
-            embeds = {{
-                title = 'This is a test message',
-                description = `You'll be notified to this webhook`,
-                color = 0x00ff00
-            }}
-        }, (Toggles.PingInMessage and Toggles.PingInMessage.Value)
-    )
-end
-
 local Players = game:GetService('Players')
 local RunS = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
