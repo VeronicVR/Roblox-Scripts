@@ -2303,7 +2303,26 @@ Drops:AddDropdown('AutoDismantle', { Text = 'Auto dismantle', Values = Rarities,
 
 Drops:AddInput('DropWebhook', { Text = 'Webhook', Placeholder = 'https://discord.com/api/webhooks/' })
 
-Drops:AddButton({ Text = "Test Webhook", Func = function() sendTestMessage() end })
+Drops:AddButton({ Text = "Test Webhook", Func = function() 
+    sendWebhook(Options.DropWebhook.Value, {
+        embeds = {{
+            title = `This is a test message!`,
+            description = `You'll be notified to this webhook`,
+            color = 0x00ff00,
+            fields = {
+                {
+                    name = 'User',
+                    value = `||[{LocalPlayer.Name}](https://www.roblox.com/users/{LocalPlayer.UserId})||`,
+                    inline = true
+                }, {
+                    name = 'Game',
+                    value = `[{MarketplaceService:GetProductInfo(game.PlaceId).Name}](https://www.roblox.com/games/{game.PlaceId})`,
+                    inline = true
+                }
+            }
+        }}
+    })
+end })
 
 Drops:AddToggle('PingInMessage', { Text = 'Ping in message' })
 
