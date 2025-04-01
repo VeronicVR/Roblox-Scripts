@@ -16,12 +16,12 @@ local sendWebhook = (function()
     local http_request = (syn and syn.request) or (fluxus and fluxus.request) or http_request or request
     local HttpService = game:GetService('HttpService')
 
-    return function(url, body, ping)
+    return function(url, body, ping, UID)
         assert(typeof(url) == 'string')
         assert(typeof(body) == 'table')
         if not string.match(url, '^https://discord') then return end
 
-        body.content = ping and '@everyone' or nil
+        body.content = (ping and UID and #tostring(UID) == 18) and "<@" .. UID .. ">" or nil
         body.username = 'Akora Hub'
         body.avatar_url = 'https://raw.githubusercontent.com/VeronicVR/Roblox-Scripts/refs/heads/main/Logo/Akora%20Hub%20Logo.png'
         body.embeds = body.embeds or {{}}
@@ -2282,15 +2282,23 @@ PlayersBox:AddSlider('XOffset', { Text = 'X offset', Default = 0, Min = -20, Max
 PlayersBox:AddSlider('YOffset', { Text = 'Y offset', Default = 5, Min = -20, Max = 20, Rounding = 0 })
 PlayersBox:AddSlider('ZOffset', { Text = 'Z offset', Default = 0, Min = -20, Max = 20, Rounding = 0 })
 
-local Drops = Misc:AddLeftGroupbox('Drops')
+local DropsTab = Misc:AddLeftTabbox()
+
+local Drops = DropsTab:AddTab('Drops')
 
 local Rarities = { 'Common', 'Uncommon', 'Rare', 'Legendary', 'Tribute' }
 
 Drops:AddDropdown('AutoDismantle', { Text = 'Auto dismantle', Values = Rarities, Multi = true, AllowNull = true })
 
-Drops:AddInput('DropWebhook', { Text = 'Webhook', Placeholder = 'https://discord.com/api/webhooks/' })
+local Webhooks = DropsTab:AddTab('Webhook')
 
-Drops:AddButton({ Text = "Test Webhook", Func = function() 
+Webhooks:AddInput('DropWebhook', { Text = 'Webhook', Placeholder = 'https://discord.com/api/webhooks/' })
+
+Webhooks:AddToggle('PingInMessage', { Text = 'Ping' })
+
+Webhooks:AddInput('PingUserID', { Numeric = true, Text = 'Ping UserID', Placeholder = 'Discord UserID Here' })
+
+Webhooks:AddButton({ Text = "Test Webhook", Func = function() 
     sendWebhook(Options.DropWebhook.Value, {
         embeds = {{
             title = `This is a test message!`,
@@ -2311,9 +2319,7 @@ Drops:AddButton({ Text = "Test Webhook", Func = function()
     })
 end })
 
-Drops:AddToggle('PingInMessage', { Text = 'Ping in message' })
-
-Drops:AddDropdown('RaritiesForWebhook', { Text = 'Rarities for webhook', Values = Rarities, Default = Rarities, Multi = true, AllowNull = true })
+Drops:AddDropdown('RaritiesForWebhook', { Text = 'Log Rarities (Webhook)', Values = Rarities, Default = { 'Legendary', 'Tribute' }, Multi = true, AllowNull = true })
 
 local dropList = {}
 
@@ -2375,7 +2381,7 @@ Inventory.ChildAdded:Connect(function(item)
                 }
             }
         }}
-    }, Toggles.PingInMessage.Value)
+    }, Toggles.PingInMessage.Value, Options.PingUserID.Value)
 end)
 
 local ownedSkillNames = {}
@@ -2410,7 +2416,7 @@ Profile.Skills.ChildAdded:Connect(function(skill)
                 }
             }
         }}
-    }, Toggles.PingInMessage.Value)
+    }, Toggles.PingInMessage.Value, Options.PingUserID.Value)
 end)
 
 local LevelsAndVelGained = Drops:AddLabel()
